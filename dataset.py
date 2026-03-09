@@ -3,8 +3,35 @@ import torch.nn as nn
 from torch.utils.data import Dataset
 
 class BilingualDataset(Dataset):
+    """
+    Dataset class for bilingual translation data.
+
+    Prepares source and target sequences with padding, special tokens, and masks.
+
+    Attributes:
+        seq_len (int): Maximum sequence length.
+        ds: The raw dataset.
+        tokenizer_src: Source language tokenizer.
+        tokenizer_tgt: Target language tokenizer.
+        src_lang (str): Source language code.
+        tgt_lang (str): Target language code.
+        sos_token (torch.Tensor): Start-of-sequence token ID.
+        eos_token (torch.Tensor): End-of-sequence token ID.
+        pad_token (torch.Tensor): Padding token ID.
+    """
 
     def __init__(self, ds, tokenizer_src, tokenizer_tgt, src_lang, tgt_lang, seq_len):
+        """
+        Initialize the BilingualDataset.
+
+        Args:
+            ds: The raw dataset containing translation pairs.
+            tokenizer_src: Tokenizer for the source language.
+            tokenizer_tgt: Tokenizer for the target language.
+            src_lang (str): Source language code (e.g., 'en').
+            tgt_lang (str): Target language code (e.g., 'fr').
+            seq_len (int): Maximum sequence length for padding.
+        """
         super().__init__()
         self.seq_len = seq_len
 
@@ -19,9 +46,24 @@ class BilingualDataset(Dataset):
         self.pad_token = torch.tensor([tokenizer_tgt.token_to_id("[PAD]")], dtype=torch.int64)
 
     def __len__(self):
+        """
+        Return the length of the dataset.
+
+        Returns:
+            int: Number of samples.
+        """
         return len(self.ds)
 
     def __getitem__(self, idx):
+        """
+        Get a single data sample.
+
+        Args:
+            idx (int): Index of the sample.
+
+        Returns:
+            dict: Dictionary with encoder_input, decoder_input, masks, label, and texts.
+        """
         src_target_pair = self.ds[idx]
         src_text = src_target_pair['translation'][self.src_lang]
         tgt_text = src_target_pair['translation'][self.tgt_lang]
@@ -81,7 +123,13 @@ class BilingualDataset(Dataset):
     
 def causal_mask(size):
     """
-    Hides Future Tokens of decoder
+    Create a causal mask to hide future tokens in the decoder.
+
+    Args:
+        size (int): Size of the mask (sequence length).
+
+    Returns:
+        torch.Tensor: Boolean mask where True indicates allowed positions.
     """
     mask = torch.triu(torch.ones((1, size, size)), diagonal=1).type(torch.int)
     return mask == 0

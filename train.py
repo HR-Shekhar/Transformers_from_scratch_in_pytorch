@@ -18,10 +18,31 @@ from pathlib import Path
 import warnings
 
 def get_all_sentences(ds, lang):
+    """
+    Generator function to yield all sentences for a specific language from the dataset.
+
+    Args:
+        ds: The dataset (iterable of translation pairs).
+        lang (str): Language code (e.g., 'en', 'fr').
+
+    Yields:
+        str: Sentences for the specified language.
+    """
     for item in ds:
         yield item['translation'][lang]
 
 def get_or_build_tokenizer(config, ds, lang):
+    """
+    Load an existing tokenizer or build and save a new one for the given language.
+
+    Args:
+        config (dict): Configuration dictionary with tokenizer settings.
+        ds: The dataset for training the tokenizer.
+        lang (str): Language code.
+
+    Returns:
+        Tokenizer: The tokenizer instance.
+    """
     tokenizer_path = Path(config['tokenizer_file'].format(lang))
     if not Path.exists(tokenizer_path):
         tokenizer = Tokenizer(WordLevel(unk_token='[UNK]'))
@@ -34,7 +55,16 @@ def get_or_build_tokenizer(config, ds, lang):
     return tokenizer
 
 def get_ds(config):
-    ds_raw = load_dataset('opus_books', f'{config["lang_src"]}-{config["lang_tgt"]}', splits = 'train')
+    """
+    Load the dataset, build tokenizers, and create DataLoaders for training and validation.
+
+    Args:
+        config (dict): Configuration dictionary with dataset and language settings.
+
+    Returns:
+        tuple: (train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt)
+    """
+    ds_raw = load_dataset('opus_books', f'{config["lang_src"]}-{config["lang_tgt"]}', split='train')
 
     # Build Tokenizers
     tokenizer_src = get_or_build_tokenizer(config, ds_raw, config['lang_src'])
@@ -68,10 +98,30 @@ def get_ds(config):
     return train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt
 
 def get_model(config, vocab_src_len, vocab_tgt_len):
+    """
+    Build and return the Transformer model.
+
+    Args:
+        config (dict): Configuration dictionary.
+        vocab_src_len (int): Source vocabulary size.
+        vocab_tgt_len (int): Target vocabulary size.
+
+    Returns:
+        Transformer: The built model.
+    """
     model = build_transformer(vocab_src_len, vocab_tgt_len, config["seq_len"], config['seq_len'], d_model=config['d_model'])
     return model
 
 def train_model(config):
+    """
+    Main training function for the Transformer model.
+
+    Handles device setup, data loading, model initialization, training loop,
+    validation, and checkpointing.
+
+    Args:
+        config (dict): Configuration dictionary with all training settings.
+    """
     # Define the device
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.has_mps or torch.backends.mps.is_available() else "cpu"
     print("Using device:", device)
