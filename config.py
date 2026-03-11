@@ -8,14 +8,14 @@ def get_config():
         dict: Configuration parameters including batch size, epochs, learning rate, etc.
     """
     return {
-        "batch_size": 8,
+        "batch_size": 6,    # or 8
         "num_epochs": 20,
         "lr": 10**-4,
         "seq_len": 350,
         "d_model": 512,
         "datasource": 'opus_books',
         "lang_src": "en",
-        "lang_tgt": "es",
+        "lang_tgt": "it",
         "model_folder": "weights",
         "model_basename": "tmodel_",
         "preload": "latest",

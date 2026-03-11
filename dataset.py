@@ -72,6 +72,10 @@ class BilingualDataset(Dataset):
         enc_input_tokens = self.tokenizer_src.encode(src_text).ids
         dec_input_tokens = self.tokenizer_tgt.encode(tgt_text).ids
 
+        # Truncate if too long
+        enc_input_tokens = enc_input_tokens[:self.seq_len - 2]  # Leave space for SOS and EOS
+        dec_input_tokens = dec_input_tokens[:self.seq_len - 1]  # Leave space for SOS
+
         # Add padding to each sentence --> Padding tokens to add = length of sequence - length of sequence - 2(SOS and EOS)
         enc_num_padding_tokens = self.seq_len - len(enc_input_tokens) - 2
         dec_num_padding_tokens = self.seq_len - len(dec_input_tokens) - 1

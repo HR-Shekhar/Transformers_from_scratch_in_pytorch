@@ -18,7 +18,9 @@ def translate(sentence: str):
 
     # Load the pretrained weights
     model_filename = latest_weights_file_path(config)
-    state = torch.load(model_filename)
+    if not Path(model_filename).exists():
+        raise FileNotFoundError(f"Model file not found: {model_filename}")
+    state = torch.load(model_filename, weights_only=True)
     model.load_state_dict(state['model_state_dict'])
 
     # if the sentence is a number use it as an index to the test set
@@ -74,6 +76,7 @@ def translate(sentence: str):
 
     # convert ids to tokens
     return tokenizer_tgt.decode(decoder_input[0].tolist())
-    
-#read sentence from argument
-translate(sys.argv[1] if len(sys.argv) > 1 else "I am not a very good a student.")
+
+if __name__ == "__main__":
+    #read sentence from argument
+    translate(sys.argv[1] if len(sys.argv) > 1 else "I am not a very good a student.")
